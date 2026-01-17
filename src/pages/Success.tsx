@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/Button';
 
 export function Success() {
   const navigate = useNavigate();
@@ -19,12 +20,14 @@ export function Success() {
         <p className="text-slate-600 mb-8">
           Please print the form and either hand it to the patient or fax it to their doctor for prescription authorization.
         </p>
-        <button
+        <Button
           onClick={handleGoBack}
-          className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] bg-red-500 hover:bg-red-600 text-white px-8 py-6 rounded-full h-9"
+          variant="primary"
+          size="lg"
+          className="focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
         >
           Go Back
-        </button>
+        </Button>
       </div>
     </div>
   );

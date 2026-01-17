@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { Button } from '../components/Button';
 import { Eye, EyeOff, ChevronRight } from 'lucide-react';
 
 export function ResetPassword() {
@@ -210,14 +211,17 @@ export function ResetPassword() {
 
               {/* Update Password Button */}
               <div className="pt-2 flex justify-center">
-                <button
+                <Button
                   type="submit"
-                  disabled={loading}
-                  className="h-12 inline-flex items-center justify-center gap-2 text-base font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 bg-red-500 hover:bg-red-600 text-white rounded-full px-8"
+                  isLoading={loading}
+                  loadingText="Updating..."
+                  variant="primary"
+                  size="md"
+                  className="font-semibold"
                 >
-                  {loading ? 'Updating...' : 'Update Password'}
+                  Update Password
                   <ChevronRight className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
 
               {/* Back to Login Link */}
@@ -257,13 +261,15 @@ export function ResetPassword() {
                 Please go back to the login page and request a fresh password reset email. Make sure to use the link immediately after receiving it.
               </p>
               <div className="flex justify-center">
-                <button
+                <Button
                   onClick={() => navigate('/login')}
-                  className="h-12 inline-flex items-center justify-center gap-2 text-base font-semibold transition-all bg-red-500 hover:bg-red-600 text-white rounded-full px-8"
+                  variant="primary"
+                  size="md"
+                  className="font-semibold"
                 >
                   Back to Login
                   <ChevronRight className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
             </div>
           </>

@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useFormData } from "../hooks/useFormData";
 import { medicationCategories } from "../data/medications";
 import { CategoryAccordion } from "../components/CategoryAccordion";
+import { Button } from "../components/Button";
 import type { CategoryData } from "../types/form";
 import { generatePDF } from "../utils/pdfGenerator";
 import { sendEmail } from "../utils/emailService";
@@ -12,6 +13,8 @@ export function Form() {
   const { user, getPharmacyName, getPharmacyDetails, signOut, loading: authLoading } = useAuth();
   const { formData, updateFormData, clearFormData } = useFormData();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Validation errors state
   const [errors, setErrors] = useState({
@@ -135,6 +138,18 @@ export function Form() {
       return;
     }
 
+    // Check if at least one medication is selected
+    const hasSelectedMedications = Object.values(formData.categories).some(
+      (categoryData) => categoryData.selectedMedications.length > 0
+    );
+    
+    if (!hasSelectedMedications) {
+      alert("Please select at least one medication before submitting.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
     try {
       // Generate PDF with pharmacy details
       const pharmacyDetails = getPharmacyDetails();
@@ -149,6 +164,8 @@ export function Form() {
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Failed to submit form. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -165,20 +182,31 @@ export function Form() {
   }
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
+    setIsLoggingOut(true);
+    try {
+      // Clear all form data before logging out
+      clearFormData(false);
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error("Error logging out:", error);
+      setIsLoggingOut(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-end mb-4">
-          <button
+          <Button
             onClick={handleLogout}
-            className="inline-flex items-center justify-center bg-slate-600 hover:bg-slate-700 text-white font-medium py-2 px-4 rounded-full transition-colors text-sm cursor-pointer"
+            isLoading={isLoggingOut}
+            loadingText="Logging out..."
+            variant="secondary"
+            size="sm"
           >
             Logout
-          </button>
+          </Button>
         </div>
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -374,9 +402,13 @@ export function Form() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
+          <Button
             onClick={handleSubmit}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all bg-red-500 hover:bg-red-600 text-white px-8 py-6 rounded-full h-9 has-[>svg]:px-3 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+            isLoading={isSubmitting}
+            loadingText="SENDING..."
+            variant="primary"
+            size="lg"
+            className="focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
           >
             SEND
             <svg
@@ -394,7 +426,7 @@ export function Form() {
             >
               <path d="m9 18 6-6-6-6"></path>
             </svg>
-          </button>
+          </Button>
         </div>
       </div>
     </div>

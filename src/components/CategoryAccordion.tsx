@@ -146,9 +146,30 @@ export function CategoryAccordion({ category, data, onUpdate }: CategoryAccordio
   };
 
   const updateOther = (id: string, updates: Partial<OtherMedication>) => {
+    const updatedOtherMedications = data.otherMedications.map((o) => (o.id === id ? { ...o, ...updates } : o));
+    
+    const selectedMedicationId = `other-${id}`;
+    const isSelected = data.selectedMedications.some((m) => m.medicationId === selectedMedicationId);
+    
+    let updatedSelectedMedications = data.selectedMedications;
+    if (isSelected) {
+      const updatedOther = updatedOtherMedications.find((o) => o.id === id);
+      updatedSelectedMedications = data.selectedMedications.map((m) =>
+        m.medicationId === selectedMedicationId
+          ? {
+              ...m,
+              medicationName: updatedOther?.name || '',
+              quantity: updatedOther?.quantity,
+              notes: updatedOther?.notes,
+            }
+          : m
+      );
+    }
+    
     onUpdate({
       ...data,
-      otherMedications: data.otherMedications.map((o) => (o.id === id ? { ...o, ...updates } : o)),
+      otherMedications: updatedOtherMedications,
+      selectedMedications: updatedSelectedMedications,
     });
   };
 
@@ -323,7 +344,7 @@ export function CategoryAccordion({ category, data, onUpdate }: CategoryAccordio
                                 ...data.selectedMedications,
                                 {
                                   medicationId: `other-${other.id}`,
-                                  medicationName: other.name || 'Other (Please Specify)',
+                                  medicationName: other.name || '',
                                   quantity: other.quantity,
                                   notes: other.notes,
                                 },

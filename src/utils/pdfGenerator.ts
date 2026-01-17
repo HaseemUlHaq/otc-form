@@ -80,16 +80,23 @@ export async function generatePDF(formData: OTCFormData, pharmacyDetails?: Pharm
     name: string;
     strength?: string;
     form?: string;
+    other?: string;
     quantity?: string;
     notes?: string;
   }> = [];
 
   Object.values(formData.categories).forEach((categoryData) => {
     categoryData.selectedMedications.forEach((med) => {
+      // For "Add Other" medications, use "Other" as the name if the name is empty or is the default placeholder
+      const medicationName = med.medicationName === 'Other (Please Specify)' || !med.medicationName 
+        ? 'Other' 
+        : med.medicationName;
+      
       allMedications.push({
-        name: med.medicationName,
+        name: medicationName,
         strength: med.strength,
         form: med.form,
+        other: med.other,
         quantity: med.quantity,
         notes: med.notes,
       });
@@ -106,6 +113,7 @@ export async function generatePDF(formData: OTCFormData, pharmacyDetails?: Pharm
     addText(`Name: ${med.name}`, 11, false);
     if (med.strength) addText(`Strength: ${med.strength}`, 11, false);
     if (med.form) addText(`Form: ${med.form}`, 11, false);
+    if (med.other) addText(`Other: ${med.other}`, 11, false);
     if (med.quantity) addText(`Quantity: ${med.quantity}`, 11, false);
     if (med.notes) addText(`Description: ${med.notes}`, 11, false);
     if (index < allMedications.length - 1) {

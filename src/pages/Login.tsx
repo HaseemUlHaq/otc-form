@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Button } from '../components/Button';
 import { Eye, EyeOff, ChevronRight } from 'lucide-react';
 
 export function Login() {
@@ -12,6 +13,7 @@ export function Login() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
   const { signIn, resetPassword } = useAuth();
   const navigate = useNavigate();
 
@@ -34,8 +36,11 @@ export function Login() {
     e.preventDefault();
     setResetMessage('');
     setError('');
+    setResetLoading(true);
 
     const { error } = await resetPassword(resetEmail);
+    setResetLoading(false);
+    
     if (error) {
       setError(error.message || 'Failed to send reset email');
     } else {
@@ -114,14 +119,17 @@ export function Login() {
 
               {/* Login Button */}
               <div className="pt-2 flex justify-center">
-                <button
+                <Button
                   type="submit"
-                  disabled={loading}
-                  className="h-12 inline-flex items-center justify-center gap-2 text-base font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 bg-red-500 hover:bg-red-600 text-white rounded-full px-8"
+                  isLoading={loading}
+                  loadingText="Logging in..."
+                  variant="primary"
+                  size="md"
+                  className="font-semibold"
                 >
                   Login
                   <ChevronRight className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
 
               {/* Forgot Password Link */}
@@ -176,13 +184,17 @@ export function Login() {
 
               {/* Send Reset Button */}
               <div className="pt-2 flex justify-center">
-                <button
+                <Button
                   type="submit"
-                  className="h-12 inline-flex items-center justify-center gap-2 text-base font-semibold transition-all bg-red-500 hover:bg-red-600 text-white rounded-full px-8"
+                  isLoading={resetLoading}
+                  loadingText="Sending..."
+                  variant="primary"
+                  size="md"
+                  className="font-semibold"
                 >
                   Send Reset Email
                   <ChevronRight className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
 
               {/* Back to Login Link */}
