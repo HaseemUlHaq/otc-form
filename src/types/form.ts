@@ -21,7 +21,6 @@ export interface CategoryData {
 }
 
 export interface OTCFormData {
-  pharmacy: string;
   patientFirstName: string;
   patientLastName: string;
   dateOfBirth: string;
@@ -31,7 +30,6 @@ export interface OTCFormData {
 }
 
 export const initialFormData: OTCFormData = {
-  pharmacy: '',
   patientFirstName: '',
   patientLastName: '',
   dateOfBirth: '',

@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { type OTCFormData, initialFormData } from '../types/form';
 
-const STORAGE_KEY = 'otc-form-data';
-
-export function useFormData() {
+export function useFormData(pharmacyId: string) {
+  const storageKey = `otc-demo-draft:${pharmacyId}`;
   const [formData, setFormData] = useState<OTCFormData>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -17,19 +16,16 @@ export function useFormData() {
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-  }, [formData]);
+    localStorage.setItem(storageKey, JSON.stringify(formData));
+  }, [formData, storageKey]);
 
   const updateFormData = (updates: Partial<OTCFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   };
 
-  const clearFormData = (preservePharmacy: boolean = false) => {
-    const newData = preservePharmacy 
-      ? { ...initialFormData, pharmacy: formData.pharmacy }
-      : initialFormData;
-    setFormData(newData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+  const clearFormData = () => {
+    setFormData(initialFormData);
+    localStorage.removeItem(storageKey);
   };
 
   return { formData, updateFormData, clearFormData };

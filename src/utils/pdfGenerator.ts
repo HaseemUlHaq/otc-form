@@ -1,8 +1,7 @@
 import jsPDF from 'jspdf';
 import type { OTCFormData } from '../types/form';
-import type { PharmacyDetails } from '../config';
 
-export async function generatePDF(formData: OTCFormData, pharmacyDetails?: PharmacyDetails | null): Promise<Blob> {
+export function downloadRequestPDF(formData: OTCFormData, pharmacyName: string): void {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
@@ -36,6 +35,7 @@ export async function generatePDF(formData: OTCFormData, pharmacyDetails?: Pharm
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
   addText(`Date: ${dateStr}`, 10, false, pageWidth - margin - 30);
   yPos = margin + 10;
+  addText('DEMO ONLY - NOT FOR CLINICAL USE', 12, true);
 
   // Greeting
   addText(`Dear ${formData.primaryCarePhysician},`, 12, false);
@@ -60,7 +60,7 @@ export async function generatePDF(formData: OTCFormData, pharmacyDetails?: Pharm
   } else {
     // PDF B - Patient-Initiated
     addText(
-      `My name is ${formData.patientFirstName} ${formData.patientLastName}, and I was born on ${formatDOB(formData.dateOfBirth)}. I recently visited ${formData.pharmacy}, where I shared that I currently purchase the following over-the-counter (OTC) medications out of pocket.`,
+      `My name is ${formData.patientFirstName} ${formData.patientLastName}, and I was born on ${formatDOB(formData.dateOfBirth)}. I recently visited ${pharmacyName}, where I shared that I currently purchase the following over-the-counter (OTC) medications out of pocket.`,
       12,
       false
     );
@@ -135,48 +135,6 @@ export async function generatePDF(formData: OTCFormData, pharmacyDetails?: Pharm
 
   yPos += 10;
 
-  // Pharmacy info
-  if (pharmacyDetails) {
-    addText(pharmacyDetails.name, 12, true);
-    addText(`Address: ${pharmacyDetails.address}`, 11, false);
-    addText(`Phone: ${pharmacyDetails.phone}`, 11, false);
-    addText(`Fax: ${pharmacyDetails.fax}`, 11, false);
-    addText(`Email: ${pharmacyDetails.email}`, 11, false);
-    addText(pharmacyDetails.website, 11, false);
-    
-    // Add logo if available
-    if (pharmacyDetails.logo) {
-      try {
-        // Load image
-        const img = new Image();
-        img.src = pharmacyDetails.logo;
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-        });
-        
-        // Add some space before logo
-        yPos += 10;
-        if (yPos > doc.internal.pageSize.getHeight() - 60) {
-          doc.addPage();
-          yPos = margin;
-        }
-        
-        // Add logo (resized to fit)
-        const imgWidth = 40;
-        const imgHeight = (img.height / img.width) * imgWidth;
-        doc.addImage(img, 'PNG', margin, yPos, imgWidth, imgHeight);
-      } catch (error) {
-        console.error('Error loading pharmacy logo:', error);
-      }
-    }
-  } else {
-    addText(formData.pharmacy, 12, true);
-    addText('Address: [Pharmacy Address]', 11, false);
-    addText('Phone: [Pharmacy Phone]', 11, false);
-    addText('Fax: [Pharmacy Fax]', 11, false);
-    addText('Email: [Pharmacy Email]', 11, false);
-  }
-
-  return doc.output('blob');
+  addText(pharmacyName, 12, true);
+  doc.save(`otc-demo-request-${formData.pdfType.toLowerCase()}.pdf`);
 }

@@ -15,10 +15,10 @@ export function Success() {
           <img src="/otc.png" alt="OTC Form Icon" className="w-[150px] h-auto" />
         </div>
         <h1 className="text-slate-800 font-bold uppercase mb-4" style={{ fontSize: 'calc(1em + 6.66667px)' }}>
-          The OTC Request Form Has Been Emailed!
+          Demo PDF generated
         </h1>
         <p className="text-slate-600 mb-8">
-          Please print the form and either hand it to the patient or fax it to their doctor for prescription authorization.
+          Check your browser downloads for the sample PDF.
         </p>
         <Button
           onClick={handleGoBack}
@@ -26,7 +26,7 @@ export function Success() {
           size="lg"
           className="focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
         >
-          Go Back
+          Start another request
         </Button>
       </div>
     </div>

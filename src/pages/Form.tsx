@@ -1,20 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import type { DemoPharmacy } from "../config";
 import { useFormData } from "../hooks/useFormData";
 import { medicationCategories } from "../data/medications";
 import { CategoryAccordion } from "../components/CategoryAccordion";
 import { Button } from "../components/Button";
 import type { CategoryData } from "../types/form";
-import { generatePDF } from "../utils/pdfGenerator";
-import { sendEmail } from "../utils/emailService";
+import { downloadRequestPDF } from "../utils/pdfGenerator";
 
-export function Form() {
-  const { user, getPharmacyName, getPharmacyDetails, signOut, loading: authLoading } = useAuth();
-  const { formData, updateFormData, clearFormData } = useFormData();
+export function Form({ pharmacy, onExit }: { pharmacy: DemoPharmacy; onExit: () => void }) {
+  const { formData, updateFormData, clearFormData } = useFormData(pharmacy.id);
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Validation errors state
   const [errors, setErrors] = useState({
@@ -23,19 +19,6 @@ export function Form() {
     primaryCarePhysician: '',
     dateOfBirth: ''
   });
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login");
-    }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    const pharmacyName = getPharmacyName();
-    if (pharmacyName && !formData.pharmacy) {
-      updateFormData({ pharmacy: pharmacyName });
-    }
-  }, [getPharmacyName, formData.pharmacy, updateFormData]);
 
   const handleCategoryUpdate = (categoryId: string, data: CategoryData) => {
     updateFormData({
@@ -100,7 +83,7 @@ export function Form() {
     return `${year}-${month}-${day}`;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     // Validate all fields
     const isFirstNameValid = validateName('patientFirstName', formData.patientFirstName);
     const isLastNameValid = validateName('patientLastName', formData.patientLastName);
@@ -121,7 +104,6 @@ export function Form() {
     
     // Validate form
     if (
-      !formData.pharmacy ||
       !formData.patientFirstName ||
       !formData.patientLastName ||
       !formData.dateOfBirth ||
@@ -148,49 +130,13 @@ export function Form() {
       return;
     }
 
-    setIsSubmitting(true);
-    
     try {
-      // Generate PDF with pharmacy details
-      const pharmacyDetails = getPharmacyDetails();
-      const pdfBlob = await generatePDF(formData, pharmacyDetails);
-
-      // Send email
-      await sendEmail(formData, pdfBlob);
-
-      // Clear form (preserve pharmacy) and navigate to success
-      clearFormData(true);
+      downloadRequestPDF(formData, pharmacy.name);
+      clearFormData();
       navigate("/success");
     } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Failed to submit form. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-slate-600">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      // Clear all form data before logging out
-      clearFormData(false);
-      await signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error("Error logging out:", error);
-      setIsLoggingOut(false);
+      console.error("Error generating demo PDF:", error);
+      alert("Could not download the PDF. Please try again.");
     }
   };
 
@@ -199,13 +145,11 @@ export function Form() {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-end mb-4">
           <Button
-            onClick={handleLogout}
-            isLoading={isLoggingOut}
-            loadingText="Logging out..."
+            onClick={onExit}
             variant="secondary"
             size="sm"
           >
-            Logout
+            Change pharmacy
           </Button>
         </div>
         <div className="text-center mb-8">
@@ -221,23 +165,7 @@ export function Form() {
           </h1>
           <div className="text-slate-600 max-w-2xl mx-auto space-y-2">
             <p>
-              This form helps eligible patients receive Medi-Cal coverage for
-              routine over-the-counter (OTC) items with a provider's
-              prescription.
-            </p>
-            <p>
-              Click each major category below to view the available medications.
-            </p>
-            <p>
-              Select the items your patient currently purchases out of pocket.
-            </p>
-            <p>
-              After submission, a PDF copy will be emailed to your pharmacy
-              inbox.
-            </p>
-            <p>
-              Please print the form and either hand it to the patient or fax it
-              to their doctor for prescription authorization.
+              Use fictional patient and provider details. The form generates a sample PDF on this device.
             </p>
           </div>
         </div>
@@ -246,19 +174,7 @@ export function Form() {
           <h2 className="mb-6 text-slate-800 font-bold uppercase" style={{ fontSize: 'calc(1em + 4px)' }}>
             Pharmacy filling out this form
           </h2>
-          <div className="space-y-3">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="radio"
-                name="pharmacy"
-                className="mt-1 w-4 h-4 accent-red-500"
-                value={getPharmacyName() || ''}
-                checked
-                readOnly
-              />
-              <span className="text-slate-700">{getPharmacyName()}</span>
-            </label>
-          </div>
+          <p className="text-slate-700">{pharmacy.name}</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -404,13 +320,11 @@ export function Form() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             onClick={handleSubmit}
-            isLoading={isSubmitting}
-            loadingText="SENDING..."
             variant="primary"
             size="lg"
             className="focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
           >
-            SEND
+            Download demo PDF
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
